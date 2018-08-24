@@ -6,7 +6,7 @@ from datetime import date
 from uuid import UUID
 
 from rsvp.constants import MEMBER_KEYS
-from rsvp import RSVP
+import rsvp
 
 
 class TestRSVP(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestRSVP(unittest.TestCase):
 
     def setUp(self):
         os.environ["RSVP_TEST_CONFIG"] = 'true'
-        self.rsvp_object = RSVP()
+        self.rsvp_object = rsvp
 
         event_source = 'PythonPune MeetUp'
         self.new_event_rsvp = self.rsvp_object.create_rsvp_store(
