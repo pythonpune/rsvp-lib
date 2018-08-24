@@ -11,6 +11,8 @@ class RSVP(object):
     RSVP Main Class
     """
 
+    MEMBERS_KEY = 'event_members'
+
     def __init__(self):
         """
         constructor
@@ -59,7 +61,7 @@ class RSVP(object):
         event_master_dict['event_description'] = event_details.get('event_description')
         event_master_dict['event_start_date'] = str(event_details['event_start_date'])
         event_master_dict['event_end_date'] = str(event_details.get('event_end_date'))
-        event_master_dict['event_members'] = event_details.get('event_members', [])
+        event_master_dict[self.MEMBERS_KEY] = event_details.get('event_members', [])
 
         self.store_file_name = str(event_id) + '.' + event_details['event_slug']
         if self.helpers.save_rsvp(self.store_file_name, event_master_dict):
@@ -88,7 +90,47 @@ class RSVP(object):
         event_data = self.helpers.load_file_data(file_to_append)
         member_keys_dict = {key: False for key in MEMBER_KEYS}
         members_list = [{member: member_keys_dict} for member in members]
-        event_data['event_members'].extend(members_list)
+        event_data[self.MEMBERS_KEY].extend(members_list)
         if self.helpers.save_rsvp(self.store_file_name, event_data):
             return True
         return False
+
+    def adjust_rsvp_state(self, event_id, members, **states):
+        """
+        Set rsvp for members for an event
+        :param event_id: uuid as string
+        :param members: list
+        :param states: dict example {'in_queue_waiting': true}
+        :return: boolean
+        """
+        file_to_update = self._locate_file(event_id)
+        event_data = self.helpers.load_file_data(file_to_update)
+
+        for member_rsvp in event_data.get(self.MEMBERS_KEY, []):
+            member = [m for m in members if member_rsvp.get(m)]
+            if member and len(member) == 1:
+                member = member[0]
+                new_state = {i: states.get(i, j) for i, j in member_rsvp[member].items()}
+                member_index = event_data[self.MEMBERS_KEY].index(member_rsvp)
+                event_data[self.MEMBERS_KEY].pop(member_index)
+                event_data[self.MEMBERS_KEY].insert(
+                    member_index, {member: new_state}
+                )
+        if self.helpers.save_rsvp(file_to_update, event_data):
+            return True
+        return False
+
+    def get_rsvp_state(self, event_id, members):
+        """
+        Get rsvp for members for an event
+        :param event_id: uuid as string
+        :param members: list
+        :return: list of dict
+        """
+        members_rsvp = []
+        file_to_update = self._locate_file(event_id)
+        event_data = self.helpers.load_file_data(file_to_update)
+        members_data = event_data.get(self.MEMBERS_KEY, [])
+        if members_data:
+            [members_rsvp.append(member) for member in members_data if list(member)[0] in members]
+        return members_rsvp
