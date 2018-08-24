@@ -5,12 +5,6 @@ from rsvp.helpers import RSVP_Helpers
 from rsvp.constants import MEMBER_KEYS
 from rsvp.exceptions import EXCEPTION_MESSAGES
 
-
-# class RSVP(object):
-#     """
-#     RSVP Main Class
-#     """
-
 MEMBERS_KEY = 'event_members'
 helpers = RSVP_Helpers()
 store_file_name = ''
